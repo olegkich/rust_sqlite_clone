@@ -1,3 +1,4 @@
+use core::panic;
 // part 1, simple REPL
 use std::{io::{self, Write}, process::exit};
 
@@ -11,12 +12,14 @@ enum PrepareStatementResult {
   Unrecognized
 }
 
+#[derive(Debug)]
 enum StatementType {
   StatementInsert,
   StatementSelect,
   StatementUnsupported
 }
 
+#[derive(Debug)]
 struct Statement {
   statement_type: StatementType,
 }
@@ -33,17 +36,26 @@ fn execute_meta_command(command: &String) -> MetaCommandResult {
 
 fn prepare_statemenet(buffer: &String, statement: &mut Statement) -> PrepareStatementResult {
   if buffer.starts_with("insert") {
-    println!("insert");
     statement.statement_type = StatementType::StatementInsert;
-    PrepareStatementResult::Success
-  } else if buffer.starts_with("select") {
-    println!("select");
-    PrepareStatementResult::Success
-  } else {
-    PrepareStatementResult::Unrecognized
+    return PrepareStatementResult::Success;
   }
+  
+  if buffer.starts_with("select") {
+    statement.statement_type = StatementType::StatementSelect;
+    return PrepareStatementResult::Success;
+  }
+
+  PrepareStatementResult::Unrecognized
+  
 }
 
+fn execute_statement(statement: &Statement) {
+  match statement.statement_type  {
+    StatementType::StatementInsert => println!("inserting..."),
+    StatementType::StatementSelect => println!("selecting..."),
+    StatementType::StatementUnsupported => println!("unsupported statement."),
+  }
+}
 
 
 fn main() {
@@ -68,9 +80,10 @@ fn main() {
     let mut statement: Statement = Statement { statement_type: StatementType::StatementUnsupported};
 
     match prepare_statemenet(&buffer, &mut statement) {
-      PrepareStatementResult::Success => println!("success"),
-      PrepareStatementResult::Unrecognized => println!("sqlok >> Unrecognized statement"),
-    }
+      PrepareStatementResult::Unrecognized => {println!("sqlok >> Unrecognized statement"); continue;},
+      _ => execute_statement(&statement),
+    }    
+    
   }
 }
 
