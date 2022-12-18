@@ -1,6 +1,12 @@
-use core::panic;
-// part 1, simple REPL
-use std::{io::{self, Write}, process::exit};
+use std::{io::{self, Write}, process::exit, default};
+
+// hardcoded row
+#[derive(Default)]
+struct Row {
+  id: usize,
+  name: String,
+  email: String
+}
 
 enum MetaCommandResult {
   Success,
@@ -12,17 +18,21 @@ enum PrepareStatementResult {
   Unrecognized
 }
 
-#[derive(Debug)]
+#[derive(Default)]
 enum StatementType {
+  #[default]
   StatementInsert,
   StatementSelect,
   StatementUnsupported
 }
 
-#[derive(Debug)]
+#[derive(Default)]
 struct Statement {
   statement_type: StatementType,
+  row_to_insert: Row
 }
+
+
 
 fn print_prompt() {print!("sqlok >> ");}
 
@@ -77,7 +87,7 @@ fn main() {
       }
     } 
 
-    let mut statement: Statement = Statement { statement_type: StatementType::StatementUnsupported};
+    let mut statement: Statement = Statement::default();
 
     match prepare_statemenet(&buffer, &mut statement) {
       PrepareStatementResult::Unrecognized => {println!("sqlok >> Unrecognized statement"); continue;},
