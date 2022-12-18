@@ -10,12 +10,13 @@ struct Row {
 
 enum MetaCommandResult {
   Success,
-  Unrecognized
+  Unrecognized,
 }
 
 enum PrepareStatementResult { 
   Success,
-  Unrecognized
+  Unrecognized,
+  SyntaxError
 }
 
 #[derive(Default)]
@@ -23,7 +24,6 @@ enum StatementType {
   #[default]
   StatementInsert,
   StatementSelect,
-  StatementUnsupported
 }
 
 #[derive(Default)]
@@ -47,6 +47,19 @@ fn execute_meta_command(command: &String) -> MetaCommandResult {
 fn prepare_statemenet(buffer: &String, statement: &mut Statement) -> PrepareStatementResult {
   if buffer.starts_with("insert") {
     statement.statement_type = StatementType::StatementInsert;
+
+    let mut args = buffer.split_whitespace();
+
+    // mother of god, this is ugly
+    let _ = args.next();
+    let id: String = if let Some(s) = args.next() { s.to_string() } else { return PrepareStatementResult::SyntaxError; };
+
+    let name: String = if let Some(s) = args.next() { s.to_string() } else { return PrepareStatementResult::SyntaxError; };
+    
+    let email: String = if let Some(s) = args.next() { s.to_string() } else { return PrepareStatementResult::SyntaxError; };
+
+    println!("inserting given values: {} {} {}", id, name, email);
+
     return PrepareStatementResult::Success;
   }
   
@@ -61,9 +74,8 @@ fn prepare_statemenet(buffer: &String, statement: &mut Statement) -> PrepareStat
 
 fn execute_statement(statement: &Statement) {
   match statement.statement_type  {
-    StatementType::StatementInsert => println!("inserting..."),
-    StatementType::StatementSelect => println!("selecting..."),
-    StatementType::StatementUnsupported => println!("unsupported statement."),
+    StatementType::StatementInsert => {println!("inserting...");},
+    StatementType::StatementSelect => {println!("selecting...");},
   }
 }
 
@@ -90,7 +102,8 @@ fn main() {
     let mut statement: Statement = Statement::default();
 
     match prepare_statemenet(&buffer, &mut statement) {
-      PrepareStatementResult::Unrecognized => {println!("sqlok >> Unrecognized statement"); continue;},
+      PrepareStatementResult::Unrecognized => {println!("sqlok >> Unrecognized statement"); continue;}
+      PrepareStatementResult::SyntaxError => {println!("sqlok >> Syntax Error."); continue;},
       _ => execute_statement(&statement),
     }    
     
